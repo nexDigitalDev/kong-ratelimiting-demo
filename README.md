@@ -20,14 +20,14 @@ This demo shows the basic concepts of Kong by creating Services, Routes, Consume
 
 ## Start Kong
 Before any manipulation, your Kong should be started. To do that, run the following lines:
-```bash
+```docker
 $ docker start kong-database
 $ docker start kong
 ```
 > If your installation is not under docker, please adapt the above commands to match your own configuration.
 
 ## Create Services
-You will first create a service **swapi-service** in the **default** workplace. If you want to create the service within another workplace please adapt the url to your own use. You can create a service with command line with *curl* or *httpie*:
+You will first create a service **swapi-service** in the **default** workspace. If you want to create the service within another workspace please adapt the url to your own use. You can create a service with command line with *curl* or *httpie*:
 
 ```bash
 # Using curl
@@ -46,7 +46,7 @@ Or create the service with Kong Manager interface by navigating to the service c
 
 ![Create swapi-service](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/createservice.PNG?raw=true)
 
-If you created the service through the browser, you will be redirected to the service page where you can find all services of the default workspace. In this page you can find the ID for each service and other related inforlation. Actually, every Kong object (service, route, plugin, customer, ...) can be identified with their unique ID. For further use, please remember that you can find the ID for each service at <https://localhost:8001/default/services>.
+If you created the service through the browser, you will be redirected to the service page where you can find all services of the default workspace. In this page you can find the **ID** for each service and other related inforlation. Actually, every Kong object (service, route, plugin, customer, ...) can be identified with their unique ID. For further use, please remember that you can find the ID for each service at <https://localhost:8001/default/services>.
 
 ![Services](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/services.PNG?raw=true)
 
@@ -99,8 +99,97 @@ $ http http://localhost:8000/sw/planets/3/
 $ http http://localhost:8000/sw/startship/9/
 ```
 
+
 ## Create Consumers
 
+The consumer or a user of a service is represented as a **Consumer** object in Kong. It is used for tracking, access control, ...
 
+We will first create a consumer named **Consumer1**. As above you can use command line :
+               
+```bash
+# Using curl
+$ curl -i -X POST \
+  --url http://localhost:8001/consumers/ \
+  --data "username=Consumer1"
 
-## Install Plugins
+# Using httpie
+$ http POST http://localhost:8001/consumers username=Consumer1
+```
+
+You can either use Kong Manager Interface. In this case, navigate to **http://localhost:8002/** and in the **default** workspace navigate to the **Consumers** page. Then click on **New Consumer** and fill the form as bellow:
+
+![Create Consumer](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/createconsumer.PNG?raw=true)
+
+> You can also navigate directly to **http://localhost:8002/consumers/create** to create the consumer.
+
+## How to enable plugins: the example of Key Authentication plugin
+
+In Kong, the notion of Authentication is highly related to Consumers. There are multiple plugins for Authentication. In this tutorial, the simple **[Key Authentication](https://docs.konghq.com/hub/kong-inc/key-auth/)** is used. With this example, you will have a general idea of how to enable plugins in Kong.
+> If you want to use other Authentication plugins or simply have a look on the available Kong plugins, you can refer to the [Kong Hub](https://docs.konghq.com/hub/) page.
+
+Generally, each plugin has its own documentation page. Within this page, there is information about how to install that plugin, how to configure and use it. A plugin can be configured as global plugin which means it is not associated to any Service, Route or Consumer. Global plugins will be run on every request. Otherwise, you can enbale a plugin on a specific Service or Route and sometimes on a Consumer.
+
+Basically, if you want to install a plugin the best practice is to follow the documentation page of that plugin. Now, enable the **[Key Authentication](https://docs.konghq.com/hub/kong-inc/key-auth/)** on **swapi-service**. According to the documentation page, you can use the command line by executing the following commands:
+```bash
+# Using curl
+$ curl -i -X POST \
+  --url http://localhost:8001/services/swapi-service/plugins \
+  --data "name=key-auth" \
+  --data "config.key_names=X-API-KEY"
+
+# Using httpie
+$ http POST http://localhost:8001/services/swapi-service/plugins \
+ name=key-auth config.key_names=X-API-KEY
+```
+
+Or use the Kong Manager interface by navigating to the plugins page in the default workspace. Then, click on **New Plugin** and find the **Key Authentication** plugin. Fill the form as bellow: 
+
+![Enable Key Authentication](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/enablekeyauth.PNG?raw=true)
+> Don't forget to replace the **service.id** by the id of your **swapi-service**.
+
+Now try to consume the **swapi-service** and you will notice that Authentication is required.
+
+```bash
+# Using curl
+$ curl -i -X GET --url http://localhost:8000/sw/starship/3/
+
+# Using httpie
+$ http http://localhost:8000/sw/starship/3/
+```
+![Authentication Required](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/authrequired.PNG?raw=true)
+
+You need to pass credentials if you want to consume this service. Credentials are associated to Consumers in Kong. You can provide new credentials for **Consumer1** created before by executing the following HTTP request:
+```bash
+#Using curl
+$ curl -i -X POST \
+    --url http://localhost:8001/consumers/Consumer1/key-auth/ \
+    --data 'key=nexDigital'
+
+#Using httpie
+$ http POST http://localhost:8001/consumers/Consumer1/key-auth/ key=nexDigital
+```
+You can either create Key Authentication credential by navigating to **http://localhost:8002/default/consumers** and click on **Consumer1**. Then, select **Credentials** and click on **New Key Auth Credential**. Fill the form as:
+
+![Create Key Auth Credential](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/createkey.PNG?raw=true)
+
+> If you want generate automatically of the key, do not pass the '**key**' data.
+
+Now **Consumer1** has credential to consume the **swapi-service**, try with the following commands to verify if credential is correctly set up:
+
+```bash
+#Using curl
+$ curl -i -X GET --url http://localhost:8000/sw/planets/11/ -H "X-API-KEY:nexDigital"
+
+#Using httpie
+$ http http://localhost:8000/sw/planets/11/  X-API-KEY:nexDigital
+```
+
+Now you know how to enable plugins in Kong, try to enable other plugins !
+
+## Rate Limiting
+In this part, you will learn about the precedence in Kong. Kong offers the possibility to configure plugins globally, by entities or combination of entities. Consequently, there is an order of precedence for running plugin. The more specific a plugin is, the higher its priority. You can refer to this [page](https://docs.konghq.com/1.1.x/admin-api/#precedence) to get more details about precedence.
+This part is based on the [Rate Limiting](https://docs.konghq.com/hub/kong-inc/rate-limiting/) plugin.
+
+### Global configuration
+
+## Proxy Caching 
