@@ -189,7 +189,37 @@ Now you know how to enable plugins in Kong, try to enable other plugins !
 ## Rate Limiting
 In this part, you will learn about the precedence in Kong. Kong offers the possibility to configure plugins globally, by entities or combination of entities. Consequently, there is an order of precedence for running plugin. The more specific a plugin is, the higher its priority. You can refer to this [page](https://docs.konghq.com/1.1.x/admin-api/#precedence) to get more details about precedence.
 This part is based on the [Rate Limiting](https://docs.konghq.com/hub/kong-inc/rate-limiting/) plugin.
+You will configure this plugin at two levels:
+- Global level: with 60 calls per hour and 3 calls per minute
+- Consumer level: make an exception for Consumer1 with 600 calls per hour
 
-### Global configuration
+### Enable at Global level
+First, enable the plugin as Global Plugin using the following commands or with Kong Manager interface:
+```bash
+#Using curl
+$ curl -i -X POST \
+    --url http://localhost:8001/plugins \
+    --data 'name=rate-limiting' \
+    --data 'config.hour=60' \
+    --data 'config.minute=3'
+
+#Using httpie
+$ http http://localhost:8001/plugins name=rate-limiting config.hour=60 config.minute=3
+```
+Now try to consume the service several times manually or automaticallt with the following commands. You will notice at a moment that your requests will be blocked since you exceeded the rate limit:
+```bash
+#Using curl
+$ seq 50 | parallel -n0 "curl -i -X GET \
+  --url http://localhost:8000/sw/planets/11/ \
+  -H 'X-API-KEY:nexDigital'"
+
+#Using httpie
+$ seq 50 | parallel -n0 "http --ignore-stdin \
+  http://localhost:8000/sw/films/1/  \
+  X-API-KEY:nexDigital"
+```
+> You must install the parallel package with this command: **sudo apt install parallel**
+
+### Enable at Consumer level
 
 ## Proxy Caching 
