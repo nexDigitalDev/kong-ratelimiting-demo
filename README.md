@@ -150,7 +150,7 @@ Or use the Kong Manager interface by navigating to the plugins page in the defau
 ![Enable Key Authentication](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/enablekeyauth.PNG?raw=true)
 > Don't forget to replace the **service.id** by the ID of your **swapi-service**. You can find the ID at <http://localhost:8002/default/services>.
 
-Now try to consume the **swapi-service** and you will notice that Authentication is required.
+Now try to consume the **swapi-service**. You will notice that Authentication is required and failed.
 
 ```bash
 # Using curl
@@ -263,7 +263,7 @@ $ curl -i -X GET \
 #Using httpie
 $ http http://localhost:8000/sw/films/1/ X-API-KEY:nexDigital
 ```
-In the response headers, you can find the **X-Rate-Limit-hour** header is set to **600**. Clients can also check how many calls remain in the hour with the **X-RateLimit-Remaining-hour** header.
+In the response headers, you can find that the **X-Rate-Limit-hour** header is set to **600**. Clients can also check how many calls remain in the hour with the **X-RateLimit-Remaining-hour** header.
 
 ![Rate Limiting Response Headers](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/detailsrate.PNG?raw=true)
 
