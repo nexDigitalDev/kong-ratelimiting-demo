@@ -5,6 +5,7 @@ This demo shows the basic concepts of Kong by creating Services, Routes, Consume
 ## Pre-requisites
 
 - Install [Kong Enterprise](https://docs.konghq.com/enterprise/0.34-x/installation/docker/)
+> You can use [Kong Community](https://docs.konghq.com/install/docker/?_ga=2.72917264.2041191503.1556005121-1619453956.1550568933) if you don't have the Enterprise version. In this case, you will not have access to the Kong Manager interface to make operations. Yet, you can always use the command lines to configure and operate with your Kong system.
 - In this demo, Kong Enterprise is installed locally with Docker and ports are configured as :
 
 
@@ -47,7 +48,7 @@ Or create the service with Kong Manager interface by navigating to the service c
 
 ![Create swapi-service](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/createservice.PNG?raw=true)
 
-If you created the service through the browser, you will be redirected to the service page where you can find all services of the default workspace. In this page you can find the **ID** for each service and other related information. Actually, every Kong object (service, route, plugin, customer, ...) can be identified with their unique ID. For further use, please remember that you can find the ID for each service at <https://localhost:8001/default/services>.
+If you created the service through the browser, you will be redirected to the service page where you can find all services of the default workspace. In this page you can find the **ID** for each service and other related information. Actually, every Kong object (service, route, plugin, customer, ...) can be identified with their unique ID. For further use, please remember that you can find the ID for each service at <https://localhost:8002/default/services>.
 
 ![Services](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/services.PNG?raw=true)
 
@@ -161,6 +162,11 @@ $ http http://localhost:8000/sw/starship/3/
 ```
 ![Authentication Required](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/authrequired.PNG?raw=true)
 
+You can also visualize all your previous requests and this unauthorized request in the Kong Manager Dashboard at <http://localhost:8002/default/dashboard>. This dashboard is related to the whole default workspace. If you want to be more precise, you can navigate to the desired Service, Route or Consumer details page to get its specific activity.
+
+![Dashboard](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/traffic.PNG?raw=true)
+
+
 You need to pass credentials if you want to consume this service. Credentials are associated to Consumers in Kong. You can provide new credentials for **Consumer1** created before by executing the following HTTP request:
 ```bash
 #Using curl
@@ -187,6 +193,13 @@ $ curl -i -X GET --url http://localhost:8000/sw/planets/11/ -H "X-API-KEY:nexDig
 $ http http://localhost:8000/sw/planets/11/  X-API-KEY:nexDigital
 ```
 > If you have another key, don't forget to replace it in the commands above.
+
+Get back to the Kong Manager Dashboard, you can observe that your previous command is valid with status code 200. You can also find this request in the **Consumer1** details page.
+
+![Dashboard](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/traffic2.PNG?raw=true)
+
+If you navigate to the **Consumer1** details page on Kong Manager, you can find this successful request in its activity onglet.
+
 
 Now you know how to enable plugins in Kong, try to enable other plugins !
 
@@ -253,6 +266,10 @@ $ seq 50 | parallel -n0 "http --ignore-stdin \
   http://localhost:8000/sw/films/1/  \
   X-API-KEY:nexDigital"
 ```
+In the Kong Manager Dashboard, the traffic should looks like:
+
+![Dashboard](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/traffic3.PNG?raw=true)
+
 You can also verify the rate by doing a single request :
 ```bash
 #Using curl
@@ -267,6 +284,21 @@ In the response headers, you can find that the **X-Rate-Limit-hour** header is s
 
 ![Rate Limiting Response Headers](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/detailsrate.PNG?raw=true)
 
+In Kong, you can make distinction between consumers. Try to create another consummer **Consumer2** as above. Then, create a credential with key set to **'kong'** and give him a rate limit of **10 calls per minute**. When you finished, execute the follwing commands:
+```bash
+#Using curl
+$ seq 50 | parallel -n0 "curl -i -X GET \
+  --url http://localhost:8000/sw/films/1/ \
+  -H 'X-API-KEY:kong'"
+
+#Using httpie
+$ seq 50 | parallel -n0 "http --ignore-stdin \
+  http://localhost:8000/sw/films/1/  \
+  X-API-KEY:kong"
+```
+The **Consumer2** has a rate limit more restricted than **Consumer1**. If you observe the dashboard, you may find something like:
+
+![Dashboard](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/traffic4.PNG?raw=true)
 
 ## Links
 There is the end of this tutorial, for more information please refer to:
