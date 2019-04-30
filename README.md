@@ -95,12 +95,12 @@ If you want to play with this service try other requests :
 # Using curl
 $ curl -i -X GET --url http://localhost:8000/sw/people/1/
 $ curl -i -X GET --url http://localhost:8000/sw/planets/3/
-$ curl -i -X GET --url http://localhost:8000/sw/starship/9/
+$ curl -i -X GET --url http://localhost:8000/sw/starships/9/
 
 # Using httpie
 $ http http://localhost:8000/sw/films/1/
 $ http http://localhost:8000/sw/planets/3/
-$ http http://localhost:8000/sw/startship/9/
+$ http http://localhost:8000/sw/startships/9/
 ```
 
 
@@ -155,10 +155,10 @@ Now try to consume the **swapi-service**. You will notice that Authentication is
 
 ```bash
 # Using curl
-$ curl -i -X GET --url http://localhost:8000/sw/starship/3/
+$ curl -i -X GET --url http://localhost:8000/sw/starships/3/
 
 # Using httpie
-$ http http://localhost:8000/sw/starship/3/
+$ http http://localhost:8000/sw/starships/3/
 ```
 ![Authentication Required](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/authrequired.PNG?raw=true)
 
