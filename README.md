@@ -221,21 +221,27 @@ $ curl -i -X POST \
     --data 'config.minute=3'
 
 #Using httpie
-$ http http://localhost:8001/plugins name=rate-limiting config.hour=60 config.minute=3
+$ http -f http://localhost:8001/plugins name=rate-limiting config.hour=60 config.minute=3
 ```
 Now try to consume the service several times manually or automatically with the following commands. You will notice at a moment that your requests will be blocked since you exceeded the rate limit:
 ```bash
 #Using curl
-$ seq 50 | parallel -n0 "curl -i -X GET \
-  --url http://localhost:8000/sw/films/1/ \
-  -H 'X-API-KEY:nexDigital'"
+$ for i in `seq 50`; do curl -i -X GET http://localhost:8000/sw/films/1/ -H 'X-API-KEY:nexDigital'; done
 
 #Using httpie
+$ for i in `seq 50`; do http :8000/sw/films/1/ X-API-KEY:nexDigital; done
+```
+<!-- $ seq 50 | parallel -n0 "curl -i -X GET \
+  --url http://localhost:8000/sw/films/1/ \
+  -H 'X-API-KEY:nexDigital'"-->
+
+<!-- #Using httpie
 $ seq 50 | parallel -n0 "http --ignore-stdin \
   http://localhost:8000/sw/films/1/  \
-  X-API-KEY:nexDigital"
-```
-> You must install the parallel package with this command: **sudo apt install parallel**
+  X-API-KEY:nexDigital" 
+> You must install the parallel package with this command: **sudo apt install parallel**.
+-->
+
 
 ![Rate Limit Exceeded](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/ratelimiting.PNG?raw=true)
 
@@ -251,12 +257,18 @@ $ curl -i -X POST \
     --data 'config.hour=600'
 
 #Using httpie
-$ http http://localhost:8001/consumers/Consumer1/plugins \
+$ http -f http://localhost:8001/consumers/Consumer1/plugins \
   name=rate-limiting config.hour=600
 ```
 Now, try again the following commands, you may notice that the limit is increased for the **Consumer1** and requests are not blocked.
 ```bash
 #Using curl
+$ for i in `seq 50`; do curl -i -X GET http://localhost:8000/sw/films/1/ -H 'X-API-KEY:nexDigital'; done
+
+#Using httpie
+$ for i in `seq 50`; do http --ignore-stdin :8000/sw/films/1/ X-API-KEY:nexDigital; done
+```
+<!--#Using curl
 $ seq 50 | parallel -n0 "curl -i -X GET \
   --url http://localhost:8000/sw/films/1/ \
   -H 'X-API-KEY:nexDigital'"
@@ -265,7 +277,7 @@ $ seq 50 | parallel -n0 "curl -i -X GET \
 $ seq 50 | parallel -n0 "http --ignore-stdin \
   http://localhost:8000/sw/films/1/  \
   X-API-KEY:nexDigital"
-```
+-->
 In the Kong Manager Dashboard, the traffic should looks like:
 
 ![Dashboard](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/traffic3.PNG?raw=true)
@@ -285,7 +297,7 @@ In the response headers, you can find that the **X-Rate-Limit-hour** header is s
 ![Rate Limiting Response Headers](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/detailsrate.PNG?raw=true)
 
 In Kong, you can make distinction between consumers. Try to create another consummer **Consumer2** as above. Then, create a credential with key set to **'kong'** and give him a rate limit of **10 calls per minute**. When you finished, execute the follwing commands:
-```bash
+<!--```bash
 #Using curl
 $ seq 50 | parallel -n0 "curl -i -X GET \
   --url http://localhost:8000/sw/films/1/ \
@@ -295,7 +307,16 @@ $ seq 50 | parallel -n0 "curl -i -X GET \
 $ seq 50 | parallel -n0 "http --ignore-stdin \
   http://localhost:8000/sw/films/1/  \
   X-API-KEY:kong"
+```-->
+
+```bash
+#Using curl
+$ for i in `seq 50`; do curl -i -X GET http://localhost:8000/sw/films/1/ -H 'X-API-KEY:kong'; done
+
+#Using httpie
+$ for i in `seq 50`; do http --ignore-stdin :8000/sw/films/1/ X-API-KEY:kong; done
 ```
+
 The **Consumer2** has a rate limit more restricted than **Consumer1**. If you observe the dashboard, you may find something like:
 
 ![Dashboard](https://github.com/nexDigitalDev/kong-ratelimiting-demo/blob/master/img/traffic4.PNG?raw=true)
